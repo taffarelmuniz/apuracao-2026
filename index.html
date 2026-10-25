@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Apuração 2º Turno</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Painel do 2º turno (25/10/2026): status, placar Lula × Flávio, projeção, mosaico por UF, tendência, governadores, tabela */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --surface-2:#e9edf3; --line:#d5dbe4;
+  --fg:#121a26; --fg-2:#4a5568; --fg-3:#7a8597; --accent:#0f6e6a;
+  --lula:#D0393F; --flavio:#2F5FD0; --outro:#9aa3b2;
+  --good:#1d7a43; --warn:#a86400; --crit:#b42318;
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d131c; --surface:#151d29; --surface-2:#1d2735; --line:#2b3748;
+  --fg:#e8edf4; --fg-2:#a9b4c4; --fg-3:#7c889a; --accent:#3cc0b8;
+  --lula:#E8565B; --flavio:#5B86F0; --outro:#6f7a8b;
+  --good:#4cc47e; --warn:#e3a33d; --crit:#f0645a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d131c; --surface:#151d29; --surface-2:#1d2735; --line:#2b3748;
+  --fg:#e8edf4; --fg-2:#a9b4c4; --fg-3:#7c889a; --accent:#3cc0b8;
+  --lula:#E8565B; --flavio:#5B86F0; --outro:#6f7a8b;
+  --good:#4cc47e; --warn:#e3a33d; --crit:#f0645a; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1280px;margin:0 auto;padding:0 16px 48px;display:grid;gap:20px}
+h1,h2{font-family:var(--f-display);font-weight:700;margin:0;letter-spacing:.01em}
+h2{font-size:1.4rem}
+.eyebrow{font:500 .72rem/1 var(--f-mono);text-transform:uppercase;letter-spacing:.12em;color:var(--fg-3)}
+.num{font-variant-numeric:tabular-nums}
+.note{color:var(--fg-3);font-size:.82rem}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.status{position:sticky;top:0;z-index:5;background:color-mix(in oklab,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);margin-inline:-16px;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto;flex-wrap:wrap}
+.brand h1{font-size:1.6rem;line-height:1}
+.brand span{color:var(--fg-3);font:500 .8rem var(--f-mono)}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font:500 .78rem var(--f-mono);background:var(--surface)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--fg-3)}
+.pill.live .dot{background:var(--crit);animation:pulse 1.6s infinite}
+.pill.ok .dot{background:var(--good)} .pill.err .dot{background:var(--warn)}
+@keyframes pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.pill.live .dot{animation:none}}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 12px;cursor:pointer;font:500 .82rem var(--f-body);color:inherit}
+.btn:hover{border-color:var(--accent)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.grid2{display:grid;gap:20px;grid-template-columns:1fr}
+@media(min-width:960px){.grid2{grid-template-columns:1.35fr 1fr}}
+/* progresso */
+.bar{height:10px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .6s}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:14px}
+.kpi{background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.kpi b{display:block;font:600 1.35rem var(--f-display)}
+/* placar */
+.duel{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cand{border-radius:12px;padding:14px;border:1px solid var(--line);position:relative;overflow:hidden}
+.cand::before{content:"";position:absolute;inset:0 auto 0 0;width:6px;background:var(--c)}
+.cand .nm{font:700 1.3rem var(--f-display);padding-left:6px}
+.cand .pc{font:700 clamp(2.4rem,7vw,3.6rem)/1 var(--f-display);color:var(--c);padding-left:6px;margin:6px 0}
+.cand .vt{padding-left:6px;color:var(--fg-2)}
+.cand.lead{box-shadow:0 0 0 2px var(--c) inset}
+.badge{display:inline-block;font:600 .7rem var(--f-mono);text-transform:uppercase;letter-spacing:.08em;padding:2px 8px;border-radius:99px;background:var(--c);color:#fff;margin-left:8px;vertical-align:middle}
+.split{display:flex;height:22px;border-radius:6px;overflow:hidden;margin-top:14px;position:relative;background:var(--surface-2)}
+.split i{display:block;height:100%;transition:width .6s}
+.split::after{content:"";position:absolute;left:50%;top:-4px;bottom:-4px;border-left:2px dashed var(--fg-2)}
+.headline{font:700 1.5rem var(--f-display);margin:0 0 4px}
+.prob-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.prob-row:last-child{border-bottom:0}
+/* mosaico */
+.tiles{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;max-width:520px;margin:0 auto}
+.tile{aspect-ratio:1;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 .8rem var(--f-mono);color:#fff;background:var(--outro);position:relative}
+.tile small{font-size:.62rem;opacity:.9}
+.tile.pend{background:var(--surface-2);color:var(--fg-3)}
+.legend{display:flex;gap:14px;justify-content:center;margin-top:10px;font-size:.82rem;color:var(--fg-2);flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--c);margin-right:6px}
+/* tabela */
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem}
+.tbl th,.tbl td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl th{font:600 .72rem var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--fg-3);cursor:pointer;position:sticky;top:0;background:var(--surface)}
+.mini{display:inline-block;width:70px;height:8px;border-radius:4px;background:var(--flavio);vertical-align:middle;overflow:hidden}
+.mini i{display:block;height:100%;background:var(--lula)}
+.gov{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.govc{border:1px solid var(--line);border-radius:10px;padding:12px}
+.govc .row{display:flex;justify-content:space-between;gap:8px;font-size:.88rem;padding:2px 0}
+.govc .row b{font-variant-numeric:tabular-nums}
+.err{border:1px solid var(--warn);color:var(--warn);border-radius:10px;padding:10px 12px;display:none}
+svg text{fill:var(--fg-3);font:11px var(--f-mono)}
+footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;color:var(--fg-3);font-size:.8rem}
+footer a{color:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="status">
+    <div class="brand"><h1>Sala de Apuração WOLF</h1><span>Presidente · 2º turno · 25/10/2026</span></div>
+    <span class="pill" id="live"><span class="dot"></span><span id="liveTxt">Conectando…</span></span>
+    <span class="pill">TSE <span id="tseHora" class="num">--</span></span>
+    <span class="pill">próx. <span id="cd" class="num">30</span>s</span>
+    <button class="btn" id="btnNow" type="button">Atualizar agora</button>
+  </header>
+
+  <div class="err" id="errBox" role="alert"></div>
+
+  <section class="panel" aria-labelledby="hProg">
+    <div class="panel-head"><h2 id="hProg">Seções totalizadas</h2><span class="note" id="progTxt"></span></div>
+    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="progBar"><i id="progFill" style="width:0"></i></div>
+    <div class="kpis">
+      <div class="kpi"><span class="eyebrow">Seções</span><b class="num" id="kSec">--</b></div>
+      <div class="kpi"><span class="eyebrow">Comparecimento</span><b class="num" id="kComp">--</b></div>
+      <div class="kpi"><span class="eyebrow">Abstenção</span><b class="num" id="kAbs">--</b></div>
+      <div class="kpi"><span class="eyebrow">Brancos + nulos</span><b class="num" id="kBN">--</b></div>
+      <div class="kpi"><span class="eyebrow">Diferença</span><b class="num" id="kDif">--</b></div>
+    </div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel" aria-labelledby="hPlacar">
+      <div class="panel-head"><h2 id="hPlacar">Placar · votos válidos</h2><span class="note">Linha tracejada = 50%</span></div>
+      <div class="duel" id="duel"></div>
+      <div class="split" aria-hidden="true"><i id="spL" style="background:var(--lula);width:50%"></i><i id="spF" style="background:var(--flavio);width:50%"></i></div>
+    </section>
+    <section class="panel" aria-labelledby="hProj">
+      <div class="panel-head"><h2 id="hProj">Projeção WOLF</h2><span class="note" id="projInfo"></span></div>
+      <p class="headline" id="projHead">Aguardando os primeiros votos</p>
+      <p class="note" id="projTxt" style="margin:0 0 10px">A projeção liga quando o TSE começar a divulgar (urnas fecham às 17h de Brasília).</p>
+      <div id="projRows"></div>
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="panel" aria-labelledby="hMapa">
+      <div class="panel-head"><h2 id="hMapa">Quem lidera em cada UF</h2><span class="note">Número = % de seções apuradas</span></div>
+      <div class="tiles" id="tiles"></div>
+      <div class="legend"><span style="--c:var(--lula)">Lula na frente</span><span style="--c:var(--flavio)">Flávio na frente</span><span style="--c:var(--surface-2)">Sem votos ainda</span></div>
+    </section>
+    <section class="panel" aria-labelledby="hTend">
+      <div class="panel-head"><h2 id="hTend">Tendência · % de Lula nos válidos</h2><span class="note">Eixo x = % de seções apuradas</span></div>
+      <div id="trend" style="min-height:220px"></div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="hGov">
+    <div class="panel-head"><h2 id="hGov">Governadores em 2º turno</h2><span class="note">AC, AM, DF, ES, RN e TO</span></div>
+    <div class="gov" id="gov"><p class="note">Carregando…</p></div>
+  </section>
+
+  <section class="panel" aria-labelledby="hTab">
+    <div class="panel-head"><h2 id="hTab">Por UF</h2><span class="note">Clique no cabeçalho para ordenar · 1º turno = Lula × Flávio só entre os dois</span></div>
+    <div style="overflow-x:auto"><table class="tbl" aria-label="Resultado por UF">
+      <thead><tr><th data-k="nome">UF</th><th data-k="pct">Apurado</th><th data-k="l">Lula</th><th data-k="f">Flávio</th><th data-k="sh">Lula %</th><th data-k="d1">vs 1º turno</th><th></th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+  </section>
+
+  <footer>
+    <span>Fonte: Tribunal Superior Eleitoral · <a href="https://resultados.tse.jus.br/oficial/app/index.html" target="_blank" rel="noopener">resultados.tse.jus.br</a> · atualiza a cada 30 s</span>
+    <span>WOLF · START THE FUTURE</span>
+  </footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const T2 = "https://resultados.tse.jus.br/oficial/ele2026/6258/dados";
+const T1 = "https://resultados.tse.jus.br/oficial/ele2026/6257/dados";
+const GOV = "https://resultados.tse.jus.br/oficial/ele2026/6260/dados";
+const UFS = ["ac","al","am","ap","ba","ce","df","es","go","ma","mg","ms","mt","pa","pb","pe","pi","pr","rj","rn","ro","rr","rs","sc","se","sp","to","zz"];
+const GOV_UFS = ["ac","am","df","es","rn","to"];
+const UF_NOME = {ac:"Acre",al:"Alagoas",am:"Amazonas",ap:"Amapá",ba:"Bahia",ce:"Ceará",df:"Distrito Federal",es:"Espírito Santo",go:"Goiás",ma:"Maranhão",mg:"Minas Gerais",ms:"Mato Grosso do Sul",mt:"Mato Grosso",pa:"Pará",pb:"Paraíba",pe:"Pernambuco",pi:"Piauí",pr:"Paraná",rj:"Rio de Janeiro",rn:"Rio Grande do Norte",ro:"Rondônia",rr:"Roraima",rs:"Rio Grande do Sul",sc:"Santa Catarina",se:"Sergipe",sp:"São Paulo",to:"Tocantins",zz:"Exterior"};
+const TILE = {rr:[2,0],ap:[4,0],am:[1,1],pa:[3,1],ma:[4,1],ce:[5,1],rn:[6,1],ac:[0,2],ro:[1,2],mt:[2,2],to:[3,2],pi:[4,2],pe:[5,2],pb:[6,2],ms:[2,3],go:[3,3],ba:[4,3],se:[5,3],al:[6,3],df:[3,4],mg:[4,4],es:[5,4],pr:[2,5],sp:[3,5],rj:[4,5],sc:[2,6],rs:[2,7],zz:[6,7]};
+const L = "13", F = "22", REFRESH = 30, SIMS = 3000;
+
+const $ = id => document.getElementById(id);
+const nf = new Intl.NumberFormat("pt-BR");
+const pf = (x, d=2) => (x*100).toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d}) + "%";
+const num = s => s == null || s === "" ? 0 : Number(String(s).replace(",", "."));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tc = s => s.toLowerCase().replace(/(^|\s)(\p{L})/gu,(m,a,b)=>a+b.toUpperCase()).replace(/\b(De|Da|Do|Dos|Das|E)\b/g,m=>m.toLowerCase());
+const store = { get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}}, set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}} };
+
+let S = { ufs:{}, br:null, base1:{}, gov:{}, hist:store.get("wolf-hist-6258",[]), sortK:"pct", sortD:-1, timer:REFRESH, loading:false };
+
+function parse(d){
+  const c = {};
+  for (const cg of d.carg||[]) for (const a of cg.agr||[]) for (const p of a.par||[]) for (const x of p.cand||[])
+    c[x.n] = {n:x.n, nm:x.nmu, part:p.sg, vap:num(x.vap), e:x.e, st:x.st};
+  const s=d.s||{}, e=d.e||{}, v=d.v||{};
+  return {hg:`${d.dg||""} ${d.hg||""}`.trim(), md:d.md, ts:num(s.ts), st:num(s.st), te:num(e.te), c:num(e.c), a:num(e.a), vv:num(v.vv), vb:num(v.vb), vn:num(v.tvn), cand:c};
+}
+async function get(url){ const r = await fetch(url+"?t="+Date.now(),{cache:"no-store"}); if(!r.ok) throw new Error(r.status); return r.json(); }
+
+async function loadBase(){ // 1º turno: base de comparecimento e de Lula × Flávio por UF
+  await Promise.all(UFS.map(uf => get(`${T1}/${uf}/${uf}-c0001-e006257-u.json`).then(d => {
+    const p = parse(d), l = p.cand[L]?.vap||0, f = p.cand[F]?.vap||0;
+    S.base1[uf] = {vv:p.vv, sh:(l+f)?l/(l+f):0.5};
+  }).catch(()=>{})));
+}
+async function load(){
+  if (S.loading) return; S.loading = true; setLive("Atualizando…","live");
+  const jobs = UFS.map(uf => get(`${T2}/${uf}/${uf}-c0001-e006258-u.json`).then(d=>{S.ufs[uf]=parse(d);return 1}).catch(()=>0));
+  jobs.push(get(`${T2}/br/br-c0001-e006258-u.json`).then(d=>{S.br=parse(d)}).catch(()=>{}));
+  GOV_UFS.forEach(uf => jobs.push(get(`${GOV}/${uf}/${uf}-c0003-e006260-u.json`).then(d=>{S.gov[uf]=parse(d)}).catch(()=>{})));
+  const r = await Promise.all(jobs); S.loading = false;
+  const fails = r.slice(0,UFS.length).filter(x=>!x).length;
+  const box = $("errBox");
+  if (!Object.keys(S.ufs).length){ box.style.display="block"; box.textContent="Não foi possível ler o TSE agora. Nova tentativa em 30 s."; setLive("Sem conexão","err"); return; }
+  box.style.display = fails ? "block" : "none"; box.textContent = fails ? `${fails} UF(s) não responderam nesta rodada; usando o último dado delas.` : "";
+  render(); setLive("Ao vivo","live");
+}
+function setLive(t,c){ $("liveTxt").textContent=t; $("live").className="pill "+c; }
+
+function totals(){
+  const t = {ts:0,st:0,te:0,c:0,a:0,vv:0,vb:0,vn:0,l:0,f:0};
+  for (const uf of UFS){ const u=S.ufs[uf]; if(!u) continue; for (const k of ["ts","st","te","c","a","vv","vb","vn"]) t[k]+=u[k]; t.l+=u.cand[L]?.vap||0; t.f+=u.cand[F]?.vap||0; }
+  const br = S.br; // o nacional manda no status oficial e é usado se estiver mais avançado
+  if (br && br.st > t.st){ for (const k of ["ts","st","te","c","a","vv","vb","vn"]) t[k]=br[k]; t.l=br.cand[L]?.vap||0; t.f=br.cand[F]?.vap||0; }
+  return t;
+}
+function gauss(){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+function project(){
+  const rows = [];
+  for (const uf of UFS){
+    const u=S.ufs[uf], b=S.base1[uf]||{vv:0,sh:0.5}; if(!u) continue;
+    const pct = u.ts? u.st/u.ts : 0, l=u.cand[L]?.vap||0, f=u.cand[F]?.vap||0, cur=(l+f)?l/(l+f):b.sh;
+    const finalVV = pct>0.08 ? (l+f)/pct : Math.max(b.vv, l+f);
+    const rem = Math.max(0, finalVV-(l+f));
+    const w = Math.min(1, pct*3); // quanto mais apurado, mais vale o dado atual da UF
+    rows.push({uf, l, f, rem, mu: w*cur + (1-w)*b.sh, sd: 0.04*(1-pct)+0.004});
+  }
+  let win=0, sum=0; const tot = totals(), done = tot.ts? tot.st/tot.ts : 0;
+  for (let i=0;i<SIMS;i++){
+    const nat = gauss()*0.012*(1-done); let lv=0, fv=0;
+    for (const r of rows){ const s=Math.min(.98,Math.max(.02,r.mu+nat+gauss()*r.sd)); lv+=r.l+r.rem*s; fv+=r.f+r.rem*(1-s); }
+    const sh = lv/(lv+fv); sum+=sh; if (sh>0.5) win++;
+  }
+  const rem = rows.reduce((a,r)=>a+r.rem,0);
+  return {pL:win/SIMS, shL:sum/SIMS, rem};
+}
+
+function render(){
+  const t = totals(), pct = t.ts? t.st/t.ts : 0, two = t.l+t.f, shL = two? t.l/two : 0;
+  $("tseHora").textContent = (S.br?.hg || "--");
+  $("progFill").style.width = (pct*100)+"%"; $("progBar").setAttribute("aria-valuenow",(pct*100).toFixed(2));
+  $("progTxt").textContent = pf(pct) + " das seções";
+  $("kSec").textContent = `${nf.format(t.st)} / ${nf.format(t.ts)}`;
+  $("kComp").textContent = t.te? pf((t.c)/(t.c+t.a||1)) : "--";
+  $("kAbs").textContent = (t.c+t.a)? pf(t.a/(t.c+t.a)) : "--";
+  $("kBN").textContent = t.c? `${nf.format(t.vb+t.vn)} · ${pf((t.vb+t.vn)/t.c,1)}` : "--";
+  $("kDif").textContent = two? `${nf.format(Math.abs(t.l-t.f))} votos` : "--";
+
+  const cand = S.br?.cand || {};
+  const card = (n, v, sh, cor, def) => {
+    const c = cand[n]||{}, lead = two && v === Math.max(t.l,t.f);
+    const eleito = c.e === "s" ? `<span class="badge" style="--c:${cor}">Eleito</span>` : "";
+    return `<div class="cand ${lead?"lead":""}" style="--c:${cor}"><div class="nm">${esc(tc(c.nm||def))}${eleito}</div>
+      <div class="pc num">${two?pf(sh):"--"}</div><div class="vt num">${nf.format(v)} votos · ${esc(c.part||"")}</div></div>`;
+  };
+  $("duel").innerHTML = card(L, t.l, shL, "var(--lula)", "Lula") + card(F, t.f, 1-shL, "var(--flavio)", "Flávio Bolsonaro");
+  $("spL").style.width = (two? shL*100 : 50)+"%"; $("spF").style.width = (two? (1-shL)*100 : 50)+"%";
+
+  // projeção
+  if (two > 0){
+    const p = project(), lider = p.pL>=0.5 ? "Lula" : "Flávio", pw = Math.max(p.pL,1-p.pL);
+    const eleito = cand[L]?.e==="s" ? "Lula" : cand[F]?.e==="s" ? "Flávio Bolsonaro" : null;
+    $("projHead").textContent = eleito ? `${eleito} eleito presidente` : S.br?.md==="s" ? "Resultado matematicamente definido" : pw>0.99 ? `${lider} praticamente eleito` : pw>0.8 ? `${lider} favorito` : pw>0.6 ? `Vantagem de ${lider}` : "Disputa aberta";
+    $("projTxt").textContent = `Projeção final: Lula ${pf(p.shL,1)} × ${pf(1-p.shL,1)} Flávio. Faltam cerca de ${nf.format(Math.round(p.rem))} votos válidos.`;
+    $("projInfo").textContent = `${nf.format(SIMS)} simulações`;
+    $("projRows").innerHTML = `<div class="prob-row"><span>Chance de Lula</span><b class="num" style="color:var(--lula)">${pf(p.pL,1)}</b></div>
+      <div class="prob-row"><span>Chance de Flávio</span><b class="num" style="color:var(--flavio)">${pf(1-p.pL,1)}</b></div>`;
+    const h = S.hist; if (!h.length || h[h.length-1].p !== pct){ h.push({p:pct, s:shL}); S.hist = h.slice(-500); store.set("wolf-hist-6258", S.hist); }
+  }
+
+  // mosaico
+  let html = ""; for (let y=0;y<8;y++) for (let x=0;x<7;x++){
+    const uf = Object.keys(TILE).find(k => TILE[k][0]===x && TILE[k][1]===y);
+    if (!uf){ html += `<div aria-hidden="true"></div>`; continue; }
+    const u = S.ufs[uf]; const l=u?.cand[L]?.vap||0, f=u?.cand[F]?.vap||0, p=u?.ts? u.st/u.ts:0;
+    const cls = (l+f)? "" : "pend", bg = (l+f)? (l>=f?"var(--lula)":"var(--flavio)") : "";
+    html += `<div class="tile ${cls}" style="${bg?`background:${bg}`:""}" title="${UF_NOME[uf]}: ${(l+f)?`Lula ${pf(l/(l+f),1)}`:"sem votos"} · ${pf(p,1)} apurado">${uf==="zz"?"EXT":uf.toUpperCase()}<small>${pf(p,0)}</small></div>`;
+  }
+  $("tiles").innerHTML = html;
+
+  drawTrend();
+  renderGov();
+  renderTable();
+}
+
+function drawTrend(){
+  const h = S.hist.filter(x=>x.p>0); const box=$("trend");
+  if (h.length < 2){ box.innerHTML = `<p class="note">A linha aparece a partir da segunda atualização com votos.</p>`; return; }
+  const W=520,H=220,ml=38,mr=10,mt=10,mb=24;
+  const ys = h.map(x=>x.s); let lo=Math.min(...ys,0.5)-0.01, hi=Math.max(...ys,0.5)+0.01;
+  const X=p=>ml+p*(W-ml-mr), Y=s=>mt+(hi-s)/(hi-lo)*(H-mt-mb);
+  const pts = h.map(x=>`${X(x.p).toFixed(1)},${Y(x.s).toFixed(1)}`).join(" ");
+  const ticks=[lo,(lo+hi)/2,hi].map(v=>`<text x="${ml-4}" y="${Y(v)+4}" text-anchor="end">${(v*100).toFixed(1)}</text>`).join("");
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Evolução do percentual de Lula nos votos válidos">
+    <line x1="${ml}" x2="${W-mr}" y1="${Y(.5)}" y2="${Y(.5)}" stroke="var(--fg-2)" stroke-dasharray="5 4"/>
+    ${ticks}<text x="${ml}" y="${H-6}">0%</text><text x="${W-mr}" y="${H-6}" text-anchor="end">100% apurado</text>
+    <polyline fill="none" stroke="var(--lula)" stroke-width="2.5" points="${pts}"/></svg>`;
+}
+
+function renderGov(){
+  const out = GOV_UFS.map(uf => {
+    const g = S.gov[uf]; if (!g) return `<div class="govc"><b>${UF_NOME[uf]}</b><p class="note">Sem dados ainda.</p></div>`;
+    const cs = Object.values(g.cand).sort((a,b)=>b.vap-a.vap), tot = cs.reduce((a,c)=>a+c.vap,0), p = g.ts? g.st/g.ts:0;
+    const rows = cs.map(c=>`<div class="row"><span>${esc(tc(c.nm))} <span class="note">${esc(c.part)}</span>${c.e==="s"?` <span class="badge" style="--c:var(--good)">Eleito</span>`:""}</span><b>${tot?pf(c.vap/tot,1):"--"}</b></div>`).join("");
+    return `<div class="govc"><div class="row"><b>${UF_NOME[uf]}</b><span class="note">${pf(p,1)} apurado</span></div>${rows}</div>`;
+  }).join("");
+  $("gov").innerHTML = out;
+}
+
+function renderTable(){
+  const rows = UFS.map(uf => { const u=S.ufs[uf]||{}, l=u.cand?.[L]?.vap||0, f=u.cand?.[F]?.vap||0, sh=(l+f)?l/(l+f):null, b=S.base1[uf];
+    return {uf, nome:UF_NOME[uf], pct:u.ts?u.st/u.ts:0, l, f, sh, d1: sh!=null&&b? sh-b.sh : null}; });
+  rows.sort((a,b)=>{ const x=a[S.sortK], y=b[S.sortK]; if(x==null) return 1; if(y==null) return -1; return (x>y?1:x<y?-1:0)*S.sortD; });
+  $("tbody").innerHTML = rows.map(r=>`<tr><td>${r.nome}</td><td class="num">${pf(r.pct,1)}</td><td class="num">${nf.format(r.l)}</td><td class="num">${nf.format(r.f)}</td>
+    <td class="num">${r.sh==null?"--":pf(r.sh,1)}</td><td class="num" style="color:${r.d1==null?"":r.d1>=0?"var(--lula)":"var(--flavio)"}">${r.d1==null?"--":(r.d1>=0?"+":"−")+(Math.abs(r.d1)*100).toFixed(1)+" p.p."}</td>
+    <td>${r.sh==null?"":`<span class="mini"><i style="width:${r.sh*100}%"></i></span>`}</td></tr>`).join("");
+}
+document.querySelectorAll(".tbl th[data-k]").forEach(th => th.addEventListener("click", () => { const k=th.dataset.k; S.sortD = S.sortK===k? -S.sortD : (k==="nome"?1:-1); S.sortK=k; renderTable(); }));
+$("btnNow").addEventListener("click", () => { S.timer = REFRESH; load(); });
+setInterval(() => { S.timer--; if (S.timer<=0){ S.timer=REFRESH; load(); } $("cd").textContent = S.timer; }, 1000);
+loadBase().then(load);
+})();
+</script>
+</body>
+</html>
